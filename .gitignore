@@ -18,7 +18,7 @@ instance/
 .env
 .env.local
 secrets.json
-config.private.json
+config.json
 
 # ===================================================================
 # 3. RADAR & FLIGHT DATA STORAGE
