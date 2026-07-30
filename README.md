@@ -10,8 +10,7 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 
 ## Setup
 
-### Milestone 1 - Pi Setup and Linux Basics 
-### Completed July 24, 2026
+### Milestone 1 - Pi Setup and Linux Basics, Completed July 24, 2026
 - Flashed Raspberry Pi OS (64-bit Desktop) using Raspberry Pi Imager
 - Installed heatsink and fan kit (fan connected to GPIO 5V or 3.3V and GND pins)
 - Connected and tested GeeekPi 7" touchscreen via HDMI and USB
@@ -21,13 +20,14 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 
 ## Installation
 
-### RTL-SDR and dump1090-fa
+### Milestone 2 - SDR Setup and Signal Learning, Completed July 29, 2026
 - Installed RTL-SDR driver on Pi - https://www.nooelec.com/store/downloads/dl/file/id/72/product/0/nesdr_installation_manual_for_ubuntu.pdf
 - Added the FlightAware apt repository and installed dump1090-fa - Steps 1-4 and 6 of https://www.flightaware.com/adsb/piaware/install
 - dump1090-fa runs automatically as a service on boot. To check status: sudo systemctl status dump1090-fa
 - Viewed live aircraft data that is written to `/run/dump1090-fa/aircraft.json` and updated every second
 - Viewed built-in map at http://[pi-ip]:8080, will make own site using flask and leaflet.js
 - Learned about the signal chain, from the antenna to output as readable data
+
 - Summary of signal chain:
 - Antenna receives signal
 - Tuner downconverts signal
