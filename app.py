@@ -10,13 +10,13 @@ def index():
 def hello():
     return 'Hello, World'
 
-from flask import request
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        # Process the form submission data
-        return "Logging you in..."
-    return "Displaying the login form."
+# from flask import request
+# @app.route("/login", methods=["GET", "POST"])
+# def login():
+#     if request.method == "POST":
+#         # Process the form submission data
+#         return "Logging you in..."
+#     return "Displaying the login form."
 
 if __name__ == "__main__":
     app.run(debug=True)

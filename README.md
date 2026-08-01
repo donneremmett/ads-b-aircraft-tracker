@@ -41,3 +41,7 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 - Once CRC-24 error checking is verified, dump1090 outputs the received information
 - Received information can then be used or displayed as wanted
 - Full signal processing notes: [docs/signal-processing-notes.md](docs/signal-processing-notes.md)
+
+## Backend
+### Milestone 3 - Flask Backend
+- Virtual memory added to increase to 2.0 GB since the pi crashed a few times due to dump1090 taking up most of the ram and then VS code took up the remaining ram
