@@ -10,7 +10,7 @@ app = Flask(__name__)
 def get_aircraft_data():
     # call function to filter data
     filtered_data = filter_aircraft_data()
-    return jsonify(filtered_data)
+    return jsonify(filter_aircraft_data())
 
 # function to filter data to only wanted information
 def filter_aircraft_data():

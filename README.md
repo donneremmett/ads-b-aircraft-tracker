@@ -4,8 +4,8 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 ## Project Plan
 - Milestone 1 - Pi Setup and Linux Basics, July 20-23
 - Milestone 2 - SDR Setup and Signal Learning, July 24 and July 27-29
-- Milestone 3 - Flask Backend, July 30-31 and August 3-4
-- Milestone 4 - Fronted Map and GUI, August 5-7 and August 10-11
+- Milestone 3 - Flask Backend, July 30-31 and August 2-3
+- Milestone 4 - Fronted Map and GUI, August 4-7 and August 10-11
 - Final Polish - August 20-28
 
 ## Setup
@@ -17,6 +17,7 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 - Enabled SSH during flashing for remote access
 - Set up VS Code Remote-SSH for development from laptop
 - Initialized Git repository and connected to GitHub
+- Also, virtual memory added to increase to 2.0 GB since the Pi crashed a few times due to dump1090 taking up most of the ram and then VS Code took up the remaining ram (did this during Milestone 3 when it became an issue)
 
 ## Installation
 
@@ -28,7 +29,7 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 - Viewed built-in map at http://[pi-ip]:8080, will make own site using flask and leaflet.js
 - Learned about the signal chain, from the antenna to output as readable data
 
-- Summary of signal chain:
+#### Summary of signal chain:
 - Antenna receives signal
 - Tuner downconverts signal
 - ADC samples downconverted signal
@@ -43,5 +44,10 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 - Full signal processing notes: [docs/signal-processing-notes.md](docs/signal-processing-notes.md)
 
 ## Backend
-### Milestone 3 - Flask Backend
-- Virtual memory added to increase to 2.0 GB since the pi crashed a few times due to dump1090 taking up most of the ram and then VS code took up the remaining ram
+### Milestone 3 - Flask Backend, Completed August 3, 2026
+- Installed Flask on Pi using virtual environment to only download for this project - https://flask.palletsprojects.com/en/stable/installation/
+- Followed Quickstart to learn Flask basics - https://flask.palletsprojects.com/en/stable/quickstart/
+- Learned about basics of backend, along with routes and endpoints
+- Built a Flask server that reads and filters only needed data from dump1090's JSON output
+- Server returns a JSON with aircraft data, will connect frontend to this in next Milestone
+- Server accessible at http://[pi-ip]:5000/ returning filtered live aircraft data
