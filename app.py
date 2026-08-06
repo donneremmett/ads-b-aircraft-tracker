@@ -1,5 +1,5 @@
 # imports
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 import json
 
 # create a Flask app instance
@@ -61,6 +61,11 @@ def filter_aircraft_data():
             print(f"Number of aircraft: {number_of_aircraft}")
     
     return filtered_data
+
+# route for testing map
+@app.route("/index")
+def index():
+    return render_template("index.html")
 
 # run the app when this file is executed directly
 if __name__ == "__main__":

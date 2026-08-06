@@ -1,0 +1,54 @@
+<!-- declare file as html -->
+<!DOCTYPE html>
+
+<!-- html tag wraps all page content -->
+<html>
+    
+<!-- head tag has background data (called metadata) not visible to users -->
+<head>
+    <!-- text shown on tab -->
+    <title>ADS-B Aircraft Tracker</title>
+
+    <!-- Leaflet CSS and own styles go here in <style> tags -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <!-- internal CSS -->
+    <style> 
+        /* make sure map container (div) has a defined height (set it in CSS) */
+        #map { 
+            height: 600px; 
+        }
+    </style>
+</head>
+
+<!-- body tag has all viewable content on the page -->
+<body>
+    <!-- HTML content here -->
+    <h1>Welcome to the ADS-B Aircraft Tracker</h1>
+    <p>This application allows you to track aircraft in real-time using ADS-B data.</p>
+    
+    <!-- put this where want map to display -->
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    
+    <script>
+        // initialize the map and set its view to a chosen geographical coordinates and zoom level
+        // by default all mouse and touch interactions on the map are enabled
+        var map = L.map('map').setView([51.0447, -114.0719], 10);
+
+        // add a tile layer to the map (OpenStreetMap tiles)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+    </script>
+
+    <!-- own JavaScript in <script> tags at bottom -->
+</body>
+</html>
