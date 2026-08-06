@@ -6,7 +6,7 @@ import json
 app = Flask(__name__)
 
 # route for data
-@app.route("/")
+@app.route("/data")
 def get_aircraft_data():
     # call function to filter data
     filtered_data = filter_aircraft_data()
@@ -63,7 +63,7 @@ def filter_aircraft_data():
     return filtered_data
 
 # route for testing map
-@app.route("/index")
+@app.route("/map")
 def index():
     return render_template("index.html")
 

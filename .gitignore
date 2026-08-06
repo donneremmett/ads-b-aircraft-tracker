@@ -19,6 +19,7 @@ instance/
 .env.local
 secrets.json
 config.json
+.vscode/
 
 # ===================================================================
 # 3. RADAR & FLIGHT DATA STORAGE
