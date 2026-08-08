@@ -58,8 +58,7 @@ def filter_aircraft_data():
     for key in filtered_data:
         if key == "aircraft":
             number_of_aircraft = len(filtered_data[key])
-            print(f"Number of aircraft: {number_of_aircraft}")
-    
+            
     return filtered_data
 
 # route for testing map

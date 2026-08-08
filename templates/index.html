@@ -16,9 +16,22 @@
 
     <!-- internal CSS -->
     <style> 
-        /* make sure map container (div) has a defined height (set it in CSS) */
+        /* make sure map container (div) has a defined height (set it in CSS), 100vh means 100% of vertical height */
         #map { 
-            height: 600px; 
+            height: 600px; /* 100vh; */
+        }
+
+        /* class to remove Leaflet's default white marker background box and borders */
+        .aircraft-marker-container {
+            background: none !important; /* !important used to override styling rules */
+            border: none !important;
+        }
+
+        /* class to target vector path inside aircraftDrawing class */
+        .aircraftDrawing path {
+            fill: #007bff; /* fills plane with blue */
+            stroke: #ffffff; /* adds white outline border */
+            stroke-width: 1px; /* thickness of outline */
         }
     </style>
 </head>
@@ -32,13 +45,16 @@
     <!-- put this where want map to display -->
     <div id="map"></div>
 
-    <!-- Leaflet JS -->
+    <!-- Leaflet JS library -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
      crossorigin=""></script>
     
      <!-- rest of JavaScript -->
     <script>
+        // constant coordinate path for B737.svg file, from https://github.com/RexKramer1/AircraftShapesSVG/tree/main
+        const iconPath = "M 18.001116,0.04724702 17.457775,0.5905878 16.34747,4.2758555 16.040364,7.2760416 v 4.6538314 l -1.889881,1.299294 0.118118,-0.755953 -0.118114,-2.01981 -0.507906,-0.177176 -1.54734,0.09449 -0.118118,1.34654 -0.02362,1.464658 0.354353,1.34654 -11.0794271,5.693266 -0.77957585,0.732329 -0.33072917,0.803199 0.0708705,1.039435 0.12839448,0.0047 0.4259608,-0.88533 0.32573474,-0.30903 11.4041356,-3.227979 3.602586,-0.01181 v 4.984561 l 0.27167,2.716704 0.318918,1.594586 -5.468843,3.909692 -0.354353,0.590587 -0.118117,0.330729 0.02362,0.956752 6.815383,-2.149739 0.318918,0.826822 0.141741,0.03544 0.342541,-0.88588 6.839006,2.137925 V 32.63588 l -0.141741,-0.614209 -0.437035,-0.555154 -5.256231,-3.803385 0.377976,-1.807198 0.177176,-1.854445 0.05906,-0.838635 v -4.795573 l 3.472657,-0.01181 11.327472,3.212798 0.354354,0.259858 0.519719,0.992188 0.188986,0.03543 -0.02363,-1.263858 -0.271672,-0.696893 -0.566965,-0.590588 -0.708705,-0.437035 -10.606956,-5.409784 0.342541,-1.181176 0.01181,-1.807199 -0.224424,-1.086681 -1.511904,-0.08268 -0.555153,0.177176 -0.118117,1.122117 0.01181,0.87407 0.05906,0.661458 -1.700892,-1.240234 -0.02362,-3.9096919 -0.05906,-1.2520462 C 19.695879,4.1823419 19.163285,2.5956131 18.556265,0.55514753 Z"
+
         // initialize the map and set its view to a chosen geographical coordinates and zoom level
         // by default all mouse and touch interactions on the map are enabled
         var map = L.map('map').setView([51.0447, -114.0719], 9);
@@ -52,16 +68,36 @@
         // create empty layer for aircraft markers to easily manage
         const aircraftLayerGroup = L.layerGroup().addTo(map);
 
+        // function to create aircraft icons with correct rotation based on heading
+        function createAircraftIcon(heading) {
+            // if no heading, default to 0 degrees (north)
+            const angle = heading || 0;
+            
+            // define divIcon to return, use divIcon instead of icon to allow for colours and rotation
+            return L.divIcon({
+                html: `<svg viewBox="0 0 50 50" width="45" height="45" class="aircraftDrawing" style="transform: rotate(${angle}deg);">
+                        <path d="${iconPath}" />
+                        </svg>`,
+
+                className: 'aircraft-marker-container', // clears Leaflet's white background
+                iconSize: [40, 40], // width and height, keep equal because picture is square
+                iconAnchor: [20, 20], // where sticker points to aircraft's position, exact center of image (half of iconSize)
+                popupAnchor: [0, -20] // where popup is relative to iconAnchor (negative y is up)
+            });
+        }
+
         // function to fetch and display aircrafts
         async function fetchAircraftData() {
             try {
-                // fetch aircraft data from the API
-                const response = await fetch('http://10.0.0.14:5000/data');
+                // fetch aircraft data from the API, use relative url since browser already knows it is talking to Flask server (not reliant on Pi's IP)
+                const response = await fetch('/data');
                 const data = await response.json();
 
                 // process and display aircraft data on the map
                 const aircraftList = data.aircraft;
-                // console.log(aircraftList);
+
+                // clear aircraft layer group before adding new markers
+                aircraftLayerGroup.clearLayers();
 
                 // loop through all aircraft and add markers to the map
                 for (const aircraft of aircraftList) {
@@ -71,23 +107,38 @@
                         continue;
                     }
 
-                    // check if flight number is missing and replace with hex
+                    // create a marker for each aircraft with lat and lon and add to the layer group
+                    const marker = L.marker([aircraft.lat, aircraft.lon], {icon: createAircraftIcon(aircraft.track)}).addTo(aircraftLayerGroup);
+                    
+                    // use to have permanent popup with flight number or hex code
+                    // marker.bindTooltip(aircraft.flight || aircraft.hex, {
+                    //     permanent: true,
+                    // });
+
+                    // check if flight number is missing and make popup with hex
                     if (aircraft.flight == null) {
                         console.log("No flight number, using hex");
-                        aircraft.flight = aircraft.hex;
+                        marker.bindPopup(`ICAO Hex Code: ${aircraft.hex}`);
                     }
 
-                    // create a marker for each aircraft and add to the layer group
-                    const marker = L.marker([aircraft.lat, aircraft.lon]).addTo(aircraftLayerGroup);
+                    // add flight number as a popup
+                    else {
+                        marker.bindPopup(aircraft.flight);                    
+                    }
                 }
 
             // if cannot fetch from API, log error to console
             } catch (error) {
                 console.error('Error fetching aircraft data:', error);
+            
+            // always executes each time
+            } finally {
+                // call the function recursively again after 1 second to update aircraft data since dump1090 updates aircraft.json once every second
+                setTimeout(fetchAircraftData, 1000);
             }
         }
 
-        // call the function to fetch and display aircraft data
+        // call the function initially when page loads to fetch and display aircraft data
         fetchAircraftData()
     </script>
 
