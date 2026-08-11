@@ -16,17 +16,71 @@
 
     <!-- internal CSS -->
     <style> 
-        /* make sure map container (div) has a defined height (set it in CSS), 100vh means 100% of vertical height */
+        /* force canvas to lock edge-to-edge display */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            overflow: hidden; /* prevents scrollbars from popping up */
+        }
+
+        /* container for both buttons */
+        .toggle-container {
+            position: fixed; /* does not move even when scroll */
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%); /* shifts box to left by half its own width */
+            z-index: 2000; /* puts above map, popups, details panel, and list */
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 8px;         
+            border-radius: 8px;   
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* default style for toggle buttons */
+        .toggle-button {
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #007bff;
+            background-color: white;
+            color: #007bff;
+            border-radius: 6px;
+        }
+
+        /* style for button if selected */
+        .toggle-button.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* map view div, includes map and details panel */
+        #map-view {
+            display: block;
+            position: relative; 
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* make sure map container (div) has a defined height (set it in CSS) */
         #map { 
-            height: 600px; /* 100vh; */
+            width: 100%;
+            height: 100%;
+            position: absolute; /* ensures not pushed by other elements */
+            top: 0;
+            left: 0;
+            z-index: 1; /* map stays on lowest layer */
         }
 
         /* id selector for details panel div that stays hidden until clicked */
         #details-panel {
             display: none;
             position: absolute;
-            top: 20px;
+            top: 50%;
             right: 20px;
+            transform: translateY(-50%);
             z-index: 1000; /* forces to sit on top of map layer */
             background-color: white;
             padding: 20px;
@@ -66,39 +120,121 @@
             stroke: #ffffff; /* adds white outline border */
             stroke-width: 1px; /* thickness of outline */
         }
+
+        /* list view div, stays hidden until toggle to list */
+        #list-view {
+            display: none;
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: white;
+            position: relative;
+            z-index: 5;
+            box-sizing: border-box;
+            padding-top: 90px;
+            overflow-y: auto; /* enables vertical scrolling when table gets long */
+            overflow-x: hidden; /* blocks horizontal left/right shifting */
+        }
+
+        /* aircraft table styling */
+        #aircraft-table {
+            width: 100%;
+            border-collapse: collapse; 
+            font-family: Arial, sans-serif;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+
+        /* styling for table headers and data */
+        #aircraft-table th, #aircraft-table td {
+            border: 1px solid #e0e0e0;
+            padding: 10px 8px; 
+            text-align: center; 
+            font-size: 13px; 
+        }
+
+        /* styling for table headers */
+        #aircraft-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+        }
+
+        /* styling for alternating row colors */
+        #aircraft-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
 
 <!-- body tag has all viewable content on the page -->
 <body>
-    <!-- HTML content here -->
+    <!-- HTML content here
     <h1>Welcome to the ADS-B Aircraft Tracker</h1>
-    <p>This application allows you to track aircraft in real-time using ADS-B data.</p>
+    <p>This application allows you to track aircraft in real-time using ADS-B data.</p> -->
     
-    <!-- put this where want map to display -->
-    <div id="map"></div>
+    <!-- div for map and list view toggle buttons -->
+    <div class = "toggle-container">
+        <!-- map button starts as active -->
+        <button id = "map-toggle-button" class = "toggle-button active">Map View</button>
+        <button id = "list-toggle-button" class = "toggle-button">List View</button>
+    </div>
+
+    <!-- div for map and details panel (map view) -->
+    <div id = "map-view">
+        <!-- put this where want map to display -->
+        <div id="map"></div>
+
+        <!-- div for details panel -->
+        <div id = "details-panel">
+            <!-- button to close panel -->
+            <button id = "close-details-button">&times;</button>
+
+            <!-- Aircraft information -->
+            <h2 id = "flight-details">Flight: </h2>
+            <p><strong>ICAO Hex Code:</strong> <span id="details-hex">--</span></p>
+            <p><strong>Altitude:</strong> <span id="details-altitude">--</span> m</p>
+            <p><strong>Speed:</strong> <span id="details-speed">--</span> km/h</p>
+            <p><strong>Heading:</strong> <span id="details-heading">--</span>&deg;</p>
+            <p><strong>Latitude:</strong> <span id="details-latitude">--</span>&deg;</p>
+            <p><strong>Longitude:</strong> <span id="details-longitude">--</span>&deg;</p>
+            <p><strong>Squawk Code:</strong> <span id="details-squawk">--</span></p>
+            <p><strong>Emergency Status:</strong> <span id="details-emergency">--</span></p>
+        </div>
+    </div>
+
+    <!-- div for list view -->
+    <div id = "list-view">
+        <!-- <h2>Live Aircraft List</h2> -->
+
+        <!-- table structure for displaying plane data -->
+        <table id = "aircraft-table">
+            <thead>
+                <tr>
+                    <th>Flight</th>
+                    <th>ICAO Hex Code</th>
+                    <th>Altitude (m)</th>
+                    <th>Speed (km/h)</th>
+                    <th>Heading (&deg;)</th>
+                    <th>Latitude (&deg;)</th>
+                    <th>Longitude (&deg;)</th>
+                    <th>Squawk Code</th>
+                    <th>Emergency Status</th>
+                </tr>
+            </thead>
+            <tbody id = "aircraft-table-body">
+                <!-- JavaScript inserts table rows here -->
+            </tbody>
+        </table>
+    </div>
 
     <!-- Leaflet JS library -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
-
-    <!-- div for details panel -->
-    <div id = "details-panel">
-        <!-- button to close panel -->
-        <button id = "close-details-button">&times;</button>
-
-        <!-- Aircraft information -->
-        <h2 id = "flight-details">Flight: </h2>
-        <p><strong>ICAO Hex Code:</strong> <span id="details-hex">--</span></p>
-        <p><strong>Altitude:</strong> <span id="details-altitude">--</span> m</p>
-        <p><strong>Speed:</strong> <span id="details-speed">--</span> km/h</p>
-        <p><strong>Heading:</strong> <span id="details-heading">--</span>&deg;</p>
-        <p><strong>Latitude:</strong> <span id="details-latitude">--</span>&deg;</p>
-        <p><strong>Longitude:</strong> <span id="details-longitude">--</span>&deg;</p>
-        <p><strong>Squawk Code:</strong> <span id="details-squawk">--</span></p>
-        <p><strong>Emergency Status:</strong> <span id="details-emergency">--</span></p>
-    </div>
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
     
     <!-- rest of JavaScript -->
     <script>
@@ -126,13 +262,20 @@
 
         // function to create new aircraft when detected
         function createNewAircraft(aircraft) {
+            // create a new HTML table row
+            const newRow = document.createElement('tr');
+
             // add new aircraft marker and data assigned to the hex key 
             aircraftMarkersByHex[aircraft.hex] = {
                 marker: L.marker([aircraft.lat, aircraft.lon], {icon: createAircraftIcon(aircraft.track)}).addTo(aircraftLayerGroup),
+                tableRow: newRow,
                 info: aircraft,
                 updated: Date.now(),
                 hexNumberUsed: false,
             };
+
+            // add empty row to HTML table
+            document.getElementById('aircraft-table-body').appendChild(newRow);
 
             // check if flight number is missing and make popup with hex, need before to be able to reference popup with this.openPopup()
             if (aircraft.flight == null) {
@@ -213,26 +356,12 @@
             document.getElementById('details-longitude').textContent = aircraft.lon !== null ? aircraft.lon.toFixed(4) : "--";
             document.getElementById('details-squawk').textContent = aircraft.squawk ? aircraft.squawk : "--";
 
-            // update emergency properly only if emergency detected
-            let emergencyStatus = "None";
-
-            // if emergency is not null or "none", then use emergency info
-            if (aircraft.emergency && aircraft.emergency !== "none") {
-                emergencyStatus = aircraft.emergency.toUpperCase();
-               
-            // if squawk code tells of emergency, use that
-            } else if (aircraft.squawk) {
-                if (aircraft.squawk === "7700") emergencyStatus = "GENERAL EMERGENCY";
-                if (aircraft.squawk === "7600") emergencyStatus = "RADIO FAILURE";
-                if (aircraft.squawk === "7500") emergencyStatus = "HIJACKING ALERT";
-            }
-    
-            // update with emergency status
-            document.getElementById('details-emergency').textContent = emergencyStatus;
+            // update with emergency status using function to determine correctly
+            document.getElementById('details-emergency').textContent = determineEmergencyStatus(aircraft);
         }
 
         // function to update aircraft markers on the map based on new data
-        function updateAircraftIcons(aircraftList) {
+        function updateAllAircraft(aircraftList) {
             // loop through all aircraft and add/update markers
             for (const aircraft of aircraftList) {
                 // check if lat or lon missing and move onto next aircraft
@@ -248,6 +377,15 @@
                 } else {
                     createNewAircraft(aircraft);
                 }
+
+                // grab specific table row element saved in dictionary
+                const targetRow = aircraftMarkersByHex[aircraft.hex].tableRow;
+                
+                // grab info saved in dictionary for this aircraft
+                const savedAircraftInfo = aircraftMarkersByHex[aircraft.hex].info;
+
+                // update list view
+                updateListView(targetRow, savedAircraftInfo);
             }
 
             // check for and delete old aircraft after 60 seconds of no new messages
@@ -255,10 +393,61 @@
                 const timeSinceUpdate = Date.now() - aircraftMarkersByHex[key].updated;
                 if (timeSinceUpdate >= 60000) {
                     aircraftMarkersByHex[key].marker.remove();
+                    // delete aircraft's table row (if it exists)
+                    if (aircraftMarkersByHex[key].tableRow) {
+                        aircraftMarkersByHex[key].tableRow.remove();
+                    }
                     delete aircraftMarkersByHex[key];
                     console.log(`Deleted ${key} after ${timeSinceUpdate} ms`);
                 }
             }
+        }
+
+        // function to update list view table with aircraft data
+        function updateListView(rowElement, aircraft) {
+            const flightNum = aircraft.flight ? aircraft.flight.trim() : "N/A";
+            const hexCode = aircraft.hex ? aircraft.hex.trim().toUpperCase() : "--";
+            const altitude = aircraft.alt_baro !== null ? (aircraft.alt_baro * 0.3048).toFixed(0) : "--";
+            const speed = aircraft.gs !== null ? (aircraft.gs * 1.852).toFixed(0) : "--";
+            const heading = aircraft.track !== null ? aircraft.track : "--";
+            const latitude = aircraft.lat !== null ? aircraft.lat.toFixed(4) : "--";
+            const longitude = aircraft.lon !== null ? aircraft.lon.toFixed(4) : "--";
+            const squawk = aircraft.squawk ? aircraft.squawk : "--";
+
+            // update with emergency status using function to determine correctly
+            const emergencyStatus = determineEmergencyStatus(aircraft);
+
+            // overwrite text cells inside aircraft's table row in HTML
+            rowElement.innerHTML = `
+                <td>${flightNum}</td>
+                <td>${hexCode}</td>
+                <td>${altitude}</td>
+                <td>${speed}</td>
+                <td>${heading}</td>
+                <td>${latitude}</td>
+                <td>${longitude}</td>
+                <td>${squawk}</td>
+                <td>${emergencyStatus}</td>
+            `;
+        }
+
+        // function to determine correct emergency status
+        function determineEmergencyStatus(aircraft) {
+            let emergencyStatus = "None";
+
+            // if emergency is not null or "none", then use emergency info
+            if (aircraft.emergency && aircraft.emergency !== "none") {
+                emergencyStatus = aircraft.emergency.toUpperCase();
+               
+            // if squawk code tells of emergency, use that
+            } else if (aircraft.squawk) {
+                const squawkCode = String(aircraft.squawk).trim();
+                if (squawkCode === "7700") emergencyStatus = "GENERAL EMERGENCY";
+                if (squawkCode === "7600") emergencyStatus = "RADIO FAILURE";
+                if (squawkCode === "7500") emergencyStatus = "HIJACKING ALERT";
+            }
+
+            return emergencyStatus;
         }
 
         // function to fetch and display aircrafts
@@ -271,8 +460,8 @@
                 // get data for all aircraft only (remove messages and now outputs)
                 const aircraftList = data.aircraft;
                 
-                // update icons
-                updateAircraftIcons(aircraftList);
+                // update all aircraft markers on the map and list view with new data
+                updateAllAircraft(aircraftList);
 
             // if cannot fetch from API, log error to console
             } catch (error) {
@@ -287,8 +476,43 @@
 
         // call the function initially when page loads to fetch and display aircraft data
         fetchAircraftData()
-        
-        // listenete to hide details panel and clear active aircraft when click close button
+
+        // get toggle buttons by id
+        const mapToggleButton = document.getElementById('map-toggle-button');
+        const listToggleButton = document.getElementById('list-toggle-button');
+
+        // get both view containers by id
+        const mapViewContainer = document.getElementById('map-view');
+        const listViewContainer = document.getElementById('list-view');
+
+        // listener for map toggle button
+        mapToggleButton.addEventListener('click', function() {
+            // show map view and hide list view
+            mapViewContainer.style.display = "block";
+            listViewContainer.style.display = "none";
+
+            // update button styles to show which is active
+            mapToggleButton.classList.add('active');
+            listToggleButton.classList.remove('active');
+
+            // force map to recalculate screen width to fit screen correctly
+            setTimeout(function() {
+                map.invalidateSize();
+            }, 50);
+        });
+
+        // listener for list toggle button
+        listToggleButton.addEventListener('click', function() {
+            // show list view and hide map view
+            mapViewContainer.style.display = "none";
+            listViewContainer.style.display = "block";
+
+            // update button styles to show which is active
+            mapToggleButton.classList.remove('active');
+            listToggleButton.classList.add('active');
+        });
+
+        // listener to hide details panel and clear active aircraft when click close button
         document.getElementById('close-details-button').addEventListener('click', function() {
             document.getElementById('details-panel').style.display = 'none';
             activeAircraftHex = null; 
