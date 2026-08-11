@@ -5,7 +5,7 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 - Milestone 1 - Pi Setup and Linux Basics, July 20-23
 - Milestone 2 - SDR Setup and Signal Learning, July 24 and July 27-29
 - Milestone 3 - Flask Backend, July 30-31 and August 2-3
-- Milestone 4 - Fronted Map and GUI, August 4-7 and August 10-11
+- Milestone 4 - Frontend Map and GUI, August 4-7 and August 10-11
 - Final Polish - August 20-28
 
 ## Setup
@@ -51,3 +51,23 @@ Summer project using Raspberry Pi 3B+ to learn about signal processing and commu
 - Built a Flask server that reads and filters only needed data from dump1090's JSON output
 - Server returns a JSON with aircraft data, will connect frontend to this in next Milestone
 - Server accessible at http://[pi-ip]:5000/ returning filtered live aircraft data
+
+## Frontend
+### Milestone 4 - Frontend Map and GUI, Completed August 11, 2026
+- Learned basics of HTML, CSS, and JavaScript to build the frontend
+- Followed Leaflet Quick Start and Custom Icons tutorial to learn basics - https://leafletjs.com/examples/quick-start/ and https://leafletjs.com/examples/custom-icons/
+- Built a single page web app served by Flask using Leaflet.js for the live map
+- Aircraft displayed as rotatable SVG plane icons using a B737 path from 
+  https://github.com/RexKramer1/AircraftShapesSVG
+- Aircraft markers tracked by ICAO hex code and updated in place each second 
+  rather than redrawn, preserves popups and details panel
+- Markers removed after 60 seconds with no new signal, matching dump1090-fa's 
+  own timeout
+- Click any aircraft to open a details panel showing flight number, ICAO hex, 
+  altitude (m), speed (km/h), heading, latitude, longitude, squawk code, 
+  emergency status, and RSSI
+- Toggle between map view and list view showing all currently tracked aircraft
+- RSSI displayed in both details panel and list view
+- Map fills the full screen with fixed toggle buttons and shutdown button overlaid
+- Shutdown button in bottom left corner safely stops dump1090-fa and powers 
+  down the Pi

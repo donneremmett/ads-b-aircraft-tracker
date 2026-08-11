@@ -1,6 +1,8 @@
 # imports
 from flask import Flask, jsonify, render_template
 import json
+import time
+import subprocess
 
 # create a Flask app instance
 app = Flask(__name__)
@@ -9,7 +11,6 @@ app = Flask(__name__)
 @app.route("/data")
 def get_aircraft_data():
     # call function to filter data
-    filtered_data = filter_aircraft_data()
     return jsonify(filter_aircraft_data())
 
 # function to filter data to only wanted information
@@ -22,7 +23,7 @@ def filter_aircraft_data():
     filtered_data = {}
 
     # keys to extract
-    wanted_keys = ["hex", "flight", "alt_baro", "gs", "track", "squawk", "emergency", "lat", "lon", "seen_pos", "seen"]
+    wanted_keys = ["hex", "flight", "alt_baro", "gs", "track", "squawk", "emergency", "lat", "lon", "rssi"]
 
     # go through now, messages, and aircraft keys
     for key in json_data:
@@ -53,18 +54,38 @@ def filter_aircraft_data():
         # if now or messages key, add to filtered data
         else:
             filtered_data[key] = json_data[key]
-
-    # print number of aircraft in filtered data
-    for key in filtered_data:
-        if key == "aircraft":
-            number_of_aircraft = len(filtered_data[key])
-            
+              
     return filtered_data
 
-# route for testing map
-@app.route("/map")
+# main route (for map and list view)
+@app.route("/")
 def index():
     return render_template("index.html")
+
+# rotue for shutting down Pi, using subprocess module because more secure
+@app.route("/shutdown", methods=['POST'])
+def shutdown_system():
+    print("Kiosk Shutdown Request Received. Powering down hardware...")
+
+    # try to execute shutdown command, 200 is ok HTTP status code
+    try:
+        # stop dump1090 cleanly
+        subprocess.run(['sudo', 'systemctl', 'stop', 'dump1090-fa'], check=True)
+        print("1. Radio decoder service stopped cleanly.")
+
+        # pause to ensure everything is closed
+        time.sleep(2)
+
+        # actually shutdown now
+        print("2. Launching hardware poweroff...")
+        subprocess.run(['sudo', 'poweroff'], check = True)
+
+        return jsonify({"status": "success", "message": "Shutting down"}), 200
+
+    # if shutdown command fails, return error message, 500 is internal server error HTTP status code
+    except subprocess.CalledProcessError as e:
+        print(f"Graceful shutdown sequence failed: {e}")
+        return jsonify({"status": "error", "message": "Sequence failed"}), 500
 
 # run the app when this file is executed directly
 if __name__ == "__main__":

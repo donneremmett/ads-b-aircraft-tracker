@@ -25,7 +25,26 @@
             overflow: hidden; /* prevents scrollbars from popping up */
         }
 
-        /* container for both buttons */
+        #shutdown-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 2500; /* highest layer */
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor:pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* change button to red when mouse over it */
+        #shutdown-button:hover {
+            background-color: #bd2130;
+        }
+
+        /* container for both toggle buttons */
         .toggle-container {
             position: fixed; /* does not move even when scroll */
             top: 20px;
@@ -175,7 +194,10 @@
     <!-- HTML content here
     <h1>Welcome to the ADS-B Aircraft Tracker</h1>
     <p>This application allows you to track aircraft in real-time using ADS-B data.</p> -->
-    
+
+    <!-- shutdown button -->
+    <button id = "shutdown-button" title = "Shutdown System">&#x23FB;</button>
+
     <!-- div for map and list view toggle buttons -->
     <div class = "toggle-container">
         <!-- map button starts as active -->
@@ -203,6 +225,7 @@
             <p><strong>Longitude:</strong> <span id="details-longitude">--</span>&deg;</p>
             <p><strong>Squawk Code:</strong> <span id="details-squawk">--</span></p>
             <p><strong>Emergency Status:</strong> <span id="details-emergency">--</span></p>
+            <p><strong>RSSI:</strong> <span id="details-rssi">--</span> dBFS</p>
         </div>
     </div>
 
@@ -223,6 +246,7 @@
                     <th>Longitude (&deg;)</th>
                     <th>Squawk Code</th>
                     <th>Emergency Status</th>
+                    <th>RSSI (dBFS)</th>
                 </tr>
             </thead>
             <tbody id = "aircraft-table-body">
@@ -250,7 +274,7 @@
         // initialize the map and set its view to a chosen geographical coordinates and zoom level
         // by default all mouse and touch interactions on the map are enabled
         var map = L.map('map').setView([51.0447, -114.0719], 9);
-
+        
         // add a tile layer to the map (OpenStreetMap tiles)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -358,6 +382,7 @@
 
             // update with emergency status using function to determine correctly
             document.getElementById('details-emergency').textContent = determineEmergencyStatus(aircraft);
+            document.getElementById('details-rssi').textContent = aircraft.rssi ? aircraft.rssi : "--";
         }
 
         // function to update aircraft markers on the map based on new data
@@ -397,8 +422,10 @@
                     if (aircraftMarkersByHex[key].tableRow) {
                         aircraftMarkersByHex[key].tableRow.remove();
                     }
+                    
+                    lastRssi = aircraftMarkersByHex[key].info.rssi;
                     delete aircraftMarkersByHex[key];
-                    console.log(`Deleted ${key} after ${timeSinceUpdate} ms`);
+                    console.log(`Deleted ${key} after ${timeSinceUpdate} ms with last RSSI of ${lastRssi} dBFS`);
                 }
             }
         }
@@ -417,6 +444,8 @@
             // update with emergency status using function to determine correctly
             const emergencyStatus = determineEmergencyStatus(aircraft);
 
+            const rssi = aircraft.rssi ? aircraft.rssi : "--";
+
             // overwrite text cells inside aircraft's table row in HTML
             rowElement.innerHTML = `
                 <td>${flightNum}</td>
@@ -428,6 +457,7 @@
                 <td>${longitude}</td>
                 <td>${squawk}</td>
                 <td>${emergencyStatus}</td>
+                <td>${rssi}</td>
             `;
         }
 
@@ -511,6 +541,31 @@
             mapToggleButton.classList.remove('active');
             listToggleButton.classList.add('active');
         });
+
+        // listener to shutdown Pi
+        document.getElementById('shutdown-button').addEventListener('click', function() {
+            // popup to confirm the user wants to shutdown
+            if (confirm("Are you sure you want to shutdown?")) {
+                // fetchs for a respons from the server using post (instead of GET)
+                fetch('/shutdown', { method: 'POST' })
+                    // if server successfully answers, then run shutdown
+                    .then(response => {
+                        // if server responds with ok, alert user that shutdown command sent
+                        if (response.ok) {
+                            alert("Shutdown command sent. The system will shutdown shortly.");
+                        // if server responds with error, alert user of failure
+                        } else {
+                            alert("Failed to send shutdown command.");
+                        }
+                    })
+                    
+                    // if fetch fails, log error to console and alert user
+                    .catch(error => {
+                        console.error('Error sending shutdown command:', error);
+                        alert("Error sending shutdown command.");
+                    });
+            }
+        })
 
         // listener to hide details panel and clear active aircraft when click close button
         document.getElementById('close-details-button').addEventListener('click', function() {

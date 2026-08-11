@@ -172,7 +172,7 @@ Detects this preamble using peak and valley detection to ensure that the peaks a
 - Antenna receives signal
 - Tuner downconverts signal
 - ADC samples downconverted signal
-- IQ samples sent to software to be process
+- IQ samples sent to software to be processed
 - (Tuner and ADC are inside USB dongle)
 - dump1090 receives IQ samples 
 - dump1090 listens for 8 microsecond preamble
@@ -180,3 +180,39 @@ Detects this preamble using peak and valley detection to ensure that the peaks a
 - Does CRC-24 error checking as soon as it decodes message to ensure message sent correctly
 - Once CRC-24 error checking is verified, dump1090 outputs the received information
 - Received information can then be used or displayed as wanted
+
+## Milestone 4:
+### Signal Strength (RSSI) - Received Signal Strength Indicator:
+- Measures power level of received radio signal
+- In negative decibel-milliwatts, numbers closer to zero mean a stronger signal, zero is the baseline/reference/absolute ceiling
+- In general:
+- -30 to -50 dBm is max signal
+- -60 to -67 dBm is good reliable signal
+- -70 dBm to -80 dBm is fair to weak signal
+- Below -86 dBm is extremely poor signal
+- RSSI measures the total received power, including noise
+- For this project the higher the RSSI value, the closer the aircraft is to my antenna or there is a direct and unblocked line of sight between aircraft and antenna
+- dump1090-fa uses dBFS instead of dBm
+- dBFS is decibels relative to full scale
+- 0 dBFS is absolute max, highest digital value SDR’s ADC can handle
+- Cannot convert to dBm since dBFS is relative
+- For dBFS:
+- 0 to -3 dBFS is a signal that is too strong and can overload the tuner
+- -5 to -15 dBFS is a strong signal
+- -20 to -40 dBFS is a good signal
+- -45 dBFS is close to noise floor, so signal too weak to decode
+
+### Data Latency:
+- Time delay between when data is created/requested/sent and when it is received/processed/made usable
+- Delay is caused due to physical distance, processing, network congestion, and hardware limits (like slow storage or CPU throttling)
+- Delay between aircraft transmitting its data and marker updating in my tracker is called end to end latency
+- For this project there is a delay between aircraft transmitting its data and my map updating as the signal has to travel through the air (at the speed of light), reach the antenna, be downconverted by the tuner and go through the ADC in the dongle, be processed by dump1090, read by the server, and updated on the frontend on the map
+- Server is polled once every second (since dump1090 updates once every second), so this adds an additional one second of latency
+- Overall one to two seconds of end to end latency at best for this
+
+### Dropout and Data Loss:
+- Dropout - sudden temporary loss of signal or data packets due to transmission errors, sensor failures, or overflows
+- Creates missing values and gaps in data
+- For this project dropouts can occur when a signal is not fully received by the antenna, when dump1090 does not output corresponding data, when the map marker does not update and stays frozen, and if the ADC becomes overloaded by a very strong signal
+- Basically dropout can occur often when receiving signals, so my tracker keeps tracking old aircraft and deletes them if a new signal has not been received from it after 60 seconds
+- I chose 60 seconds since that is the same amount of time that dump1090-fa uses before deleting old aircraft that have not received another signal
